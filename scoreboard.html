@@ -36,18 +36,18 @@
   <div class="wrap">
     <header>
       <h1>Page d'affichage · Décompte 24h & Score X–Y</h1>
-      <div class="hint">Raccourcis : Espace (pause), R (reset), A/Z = X −/+, K/M = Y −/+, F (plein écran)</div>
+      <div class="hint">Raccourcis : Espace (pause/démarrer), R (reset), A/Z = X −/+, K/M = Y −/+, F (plein écran)</div>
     </header>
 
     <div class="grid">
       <!-- TIMER -->
       <section class="panel">
         <div class="time">
-          <div id="timeLeft" class="big">--:--:--</div>
+          <div id="timeLeft" class="big">24:00:00</div>
           <div id="done" class="done" style="display:none">Terminé !</div>
         </div>
         <div class="center" style="margin-top:12px;">
-          <button id="toggleRun" class="primary">Pause</button>
+          <button id="toggleRun" class="primary">Démarrer</button>
           <button id="reset24" class="danger">Reset 24h</button>
           <button data-add="-60">-1 h</button>
           <button data-add="-5">-5 min</button>
@@ -59,7 +59,7 @@
       <!-- SCORE -->
       <section class="panel">
         <div class="scoreboard">
-          <div class="score-card" id="cardX">
+          <div class="score-card">
             <input id="nameX" class="team-name" placeholder="Nom équipe X" />
             <div id="scoreX" class="score">0</div>
             <div class="btns">
@@ -67,7 +67,7 @@
               <button data-team="X" data-delta="1" class="primary">+1</button>
             </div>
           </div>
-          <div class="score-card" id="cardY">
+          <div class="score-card">
             <input id="nameY" class="team-name" placeholder="Nom équipe Y" />
             <div id="scoreY" class="score">0</div>
             <div class="btns">
@@ -88,8 +88,8 @@
   </div>
 
   <script>
-    const $ = (sel) => document.querySelector(sel);
-    const pad2 = (n) => String(n).padStart(2, '0');
+    const $ = (s) => document.querySelector(s);
+    const pad2 = (n) => String(n).padStart(2, "0");
     const now = () => Date.now();
     const DAY_MS = 24 * 60 * 60 * 1000;
     const fmt = (ms) => {
@@ -103,34 +103,66 @@
     const readLS = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
     const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
-    let endTime = readLS('endTime', now() + DAY_MS);
-    let running = readLS('running', true);
+    // TIMER
+    let endTime = readLS('endTime', null);
+    let running = readLS('running', false);
     const timeLeftEl = $('#timeLeft');
     const doneEl = $('#done');
     const toggleBtn = $('#toggleRun');
 
     function tick() {
+      if (!endTime) return;
       const rem = Math.max(0, endTime - now());
       timeLeftEl.textContent = fmt(rem);
       doneEl.style.display = rem === 0 ? 'block' : 'none';
       if (rem === 0) running = false;
     }
+
     let iv;
     function startTicker() {
       if (iv) clearInterval(iv);
       if (running) iv = setInterval(tick, 250);
       tick();
     }
-    function updateRunBtn() { toggleBtn.textContent = running ? 'Pause' : 'Reprendre'; }
-    toggleBtn.onclick = () => { running = !running; writeLS('running', running); updateRunBtn(); startTicker(); };
-    $('#reset24').onclick = () => { endTime = now() + DAY_MS; running = true; writeLS('endTime', endTime); writeLS('running', running); updateRunBtn(); startTicker(); };
-    document.querySelectorAll('button[data-add]').forEach(b => b.onclick = () => { endTime = Math.max(now(), endTime + Number(b.dataset.add) * 60 * 1000); writeLS('endTime', endTime); startTicker(); });
 
-    // Scores
+    function updateRunBtn() {
+      toggleBtn.textContent = running ? "Pause" : "Démarrer";
+    }
+
+    toggleBtn.onclick = () => {
+      if (!running) {
+        // Démarre un décompte de 24h à partir de maintenant
+        endTime = now() + DAY_MS;
+        writeLS('endTime', endTime);
+      }
+      running = !running;
+      writeLS('running', running);
+      updateRunBtn();
+      startTicker();
+    };
+
+    $('#reset24').onclick = () => {
+      endTime = null;
+      running = false;
+      timeLeftEl.textContent = "24:00:00";
+      doneEl.style.display = "none";
+      writeLS('endTime', null);
+      writeLS('running', false);
+      updateRunBtn();
+      if (iv) clearInterval(iv);
+    };
+
+    document.querySelectorAll('button[data-add]').forEach(b => b.onclick = () => {
+      if (!endTime) return; // inactif si pas lancé
+      endTime = Math.max(now(), endTime + Number(b.dataset.add) * 60 * 1000);
+      writeLS('endTime', endTime);
+      tick();
+    });
+
+    // SCORES
     let scoreX = readLS('scoreX', 0);
     let scoreY = readLS('scoreY', 0);
-    const scoreXEl = $('#scoreX');
-    const scoreYEl = $('#scoreY');
+    const scoreXEl = $('#scoreX'), scoreYEl = $('#scoreY');
     const renderScores = () => { scoreXEl.textContent = scoreX; scoreYEl.textContent = scoreY; };
     const changeScore = (t, d) => {
       if (t === 'X') { scoreX = Math.max(0, scoreX + d); writeLS('scoreX', scoreX); }
@@ -140,19 +172,19 @@
     document.querySelectorAll('button[data-team]').forEach(b => b.onclick = () => changeScore(b.dataset.team, Number(b.dataset.delta)));
     $('#resetScores').onclick = () => { scoreX = 0; scoreY = 0; writeLS('scoreX', 0); writeLS('scoreY', 0); renderScores(); };
 
-    // Noms d'équipe
+    // NOMS
     const nameX = $('#nameX'), nameY = $('#nameY');
     nameX.value = readLS('nameX', 'Équipe X');
     nameY.value = readLS('nameY', 'Équipe Y');
     nameX.oninput = () => writeLS('nameX', nameX.value);
     nameY.oninput = () => writeLS('nameY', nameY.value);
 
-    // Clavier
+    // CLAVIER
     document.addEventListener('keydown', (e) => {
       if (e.repeat) return;
       const k = e.key.toLowerCase();
-      if (k === ' ') { running = !running; writeLS('running', running); updateRunBtn(); startTicker(); e.preventDefault(); }
-      else if (k === 'r') { endTime = now() + DAY_MS; running = true; writeLS('endTime', endTime); startTicker(); }
+      if (k === ' ') { toggleBtn.click(); e.preventDefault(); }
+      else if (k === 'r') { $('#reset24').click(); }
       else if (k === 'f') { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
       else if (k === 'a') changeScore('X', -1);
       else if (k === 'z') changeScore('X', +1);
