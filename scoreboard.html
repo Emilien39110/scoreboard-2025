@@ -7,85 +7,68 @@
   <style>
     :root { --bg:#0b0b0b; --fg:#f5f5f5; --muted:#9aa0a6; --accent:#3b82f6; --danger:#ef4444; }
     * { box-sizing: border-box; }
-    html, body { height:100%; margin:0; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    header h1 { font-size: clamp(18px, 2vw, 24px); margin:0; font-weight: 650; }
-    button, input { border-radius: 10px; border: 1px solid #2a2a2a; background:#141414; color:var(--fg); padding:10px 12px; font-size:14px; }
+    html, body { height:100%; margin:0; padding:0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; padding: 20px; }
+    button, input { border-radius: 10px; border: 1px solid #2a2a2a; background:#141414; color:var(--fg); padding:10px 12px; font-size:16px; }
     button { cursor:pointer; }
     button:hover { background:#181818; }
     button.primary { background: var(--accent); border-color: var(--accent); color:white; }
     button.danger { background: var(--danger); border-color: var(--danger); color:white; }
-    .panel { border:1px solid #222; background:#111; border-radius: 16px; padding: 16px; }
-    .time { text-align:center; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .time .big { font-size: clamp(48px, 10vw, 120px); line-height: 1; }
+    .panel { border:1px solid #222; background:#111; border-radius: 16px; padding: 24px; text-align:center; max-width:800px; width:100%; }
+    .time { font-weight: 800; font-variant-numeric: tabular-nums; }
+    .time .big { font-size: clamp(60px, 12vw, 140px); line-height: 1; }
     .time .done { color: var(--danger); font-weight:700; margin-top:6px; }
-    .grid { display:grid; gap:16px; grid-template-columns: 1fr; }
-    @media (min-width: 900px) { .grid { grid-template-columns: 2fr 1fr; } }
-    .scoreboard { display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:center; }
-    .score-card { border:1px solid #222; background:#0f0f0f; border-radius:16px; padding:16px; text-align:center; }
-    .team-name { width:100%; text-align:center; background:#131313; border:1px solid #2a2a2a; padding:8px 10px; border-radius:10px; font-size:14px; }
-    .score { font-size: clamp(44px, 8vw, 90px); font-weight:900; line-height:1; font-variant-numeric: tabular-nums; }
-    .btns { display:flex; justify-content:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
-    .hint { color: var(--muted); font-size: 13px; }
-    .center { text-align:center; }
+    .scoreboard { display:flex; justify-content:center; align-items:center; gap:40px; margin-top:20px; }
+    .score-card { border:1px solid #222; background:#0f0f0f; border-radius:16px; padding:16px 24px; min-width:220px; }
+    .team-name { width:100%; text-align:center; background:#131313; border:1px solid #2a2a2a; padding:8px 10px; border-radius:10px; font-size:18px; color:var(--fg); }
+    .score { font-size: clamp(50px, 10vw, 120px); font-weight:900; line-height:1; margin-top:10px; }
+    .btns { display:flex; justify-content:center; gap:12px; margin-top:10px; flex-wrap:wrap; }
+    .hint { color: var(--muted); font-size: 14px; margin-top:12px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Page d'affichage · Décompte 24h & Score X–Y</h1>
-      <div class="hint">Raccourcis : Espace (pause/démarrer), R (reset), A/Z = X −/+, K/M = Y −/+, F (plein écran)</div>
-    </header>
-
-    <div class="grid">
-      <!-- TIMER -->
-      <section class="panel">
-        <div class="time">
-          <div id="timeLeft" class="big">24:00:00</div>
-          <div id="done" class="done" style="display:none">Terminé !</div>
-        </div>
-        <div class="center" style="margin-top:12px;">
-          <button id="toggleRun" class="primary">Démarrer</button>
-          <button id="reset24" class="danger">Reset 24h</button>
-          <button data-add="-60">-1 h</button>
-          <button data-add="-5">-5 min</button>
-          <button data-add="5">+5 min</button>
-          <button data-add="60">+1 h</button>
-        </div>
-      </section>
-
-      <!-- SCORE -->
-      <section class="panel">
-        <div class="scoreboard">
-          <div class="score-card">
-            <input id="nameX" class="team-name" placeholder="Nom équipe X" />
-            <div id="scoreX" class="score">0</div>
-            <div class="btns">
-              <button data-team="X" data-delta="-1">−1</button>
-              <button data-team="X" data-delta="1" class="primary">+1</button>
-            </div>
-          </div>
-          <div class="score-card">
-            <input id="nameY" class="team-name" placeholder="Nom équipe Y" />
-            <div id="scoreY" class="score">0</div>
-            <div class="btns">
-              <button data-team="Y" data-delta="-1">−1</button>
-              <button data-team="Y" data-delta="1" class="primary">+1</button>
-            </div>
-          </div>
-        </div>
-        <div class="center" style="margin-top:12px;">
-          <button id="resetScores">Réinitialiser X–Y</button>
-        </div>
-      </section>
+  <!-- TIMER -->
+  <section class="panel">
+    <div class="time">
+      <div id="timeLeft" class="big">24:00:00</div>
+      <div id="done" class="done" style="display:none">Terminé !</div>
     </div>
+    <div style="margin-top:20px;">
+      <button id="toggleRun" class="primary">Démarrer</button>
+      <button id="reset24" class="danger">Reset 24h</button>
+      <button data-add="-60">-1 h</button>
+      <button data-add="-5">-5 min</button>
+      <button data-add="5">+5 min</button>
+      <button data-add="60">+1 h</button>
+    </div>
+  </section>
 
-    <section class="panel hint">
-      L'état (scores, noms, timer) est sauvegardé automatiquement dans votre navigateur (localStorage).
-    </section>
-  </div>
+  <!-- SCORE -->
+  <section class="panel">
+    <div class="scoreboard">
+      <div class="score-card">
+        <input id="nameX" class="team-name" placeholder="Nom équipe X" />
+        <div id="scoreX" class="score">0</div>
+        <div class="btns">
+          <button data-team="X" data-delta="-1">−1</button>
+          <button data-team="X" data-delta="1" class="primary">+1</button>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <input id="nameY" class="team-name" placeholder="Nom équipe Y" />
+        <div id="scoreY" class="score">0</div>
+        <div class="btns">
+          <button data-team="Y" data-delta="-1">−1</button>
+          <button data-team="Y" data-delta="1" class="primary">+1</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;">
+      <button id="resetScores">Réinitialiser X–Y</button>
+    </div>
+    <div class="hint">Raccourcis : Espace (pause/démarrer), R (reset), A/Z = X −/+, K/M = Y −/+, F (plein écran)</div>
+  </section>
 
   <script>
     const $ = (s) => document.querySelector(s);
@@ -109,6 +92,7 @@
     const timeLeftEl = $('#timeLeft');
     const doneEl = $('#done');
     const toggleBtn = $('#toggleRun');
+    let iv;
 
     function tick() {
       if (!endTime) return;
@@ -118,20 +102,16 @@
       if (rem === 0) running = false;
     }
 
-    let iv;
     function startTicker() {
       if (iv) clearInterval(iv);
       if (running) iv = setInterval(tick, 250);
       tick();
     }
 
-    function updateRunBtn() {
-      toggleBtn.textContent = running ? "Pause" : "Démarrer";
-    }
+    function updateRunBtn() { toggleBtn.textContent = running ? "Pause" : "Démarrer"; }
 
     toggleBtn.onclick = () => {
       if (!running) {
-        // Démarre un décompte de 24h à partir de maintenant
         endTime = now() + DAY_MS;
         writeLS('endTime', endTime);
       }
@@ -153,7 +133,7 @@
     };
 
     document.querySelectorAll('button[data-add]').forEach(b => b.onclick = () => {
-      if (!endTime) return; // inactif si pas lancé
+      if (!endTime) return;
       endTime = Math.max(now(), endTime + Number(b.dataset.add) * 60 * 1000);
       writeLS('endTime', endTime);
       tick();
